@@ -10,7 +10,7 @@ import (
 	c "lambda/common"
 )
 
-func handleGetVaults(ctx context.Context, r c.Req, uID string) (c.Res, error) {
+func handleGetVaults(ctx context.Context, uID string) (c.Res, error) {
 	condExpr := aws.String("PK = :pk AND begins_with(SK, :sk)")
 	attrValues, _ := attributevalue.MarshalMap(c.MapS{
 		":pk": "U#" + uID,
@@ -37,12 +37,11 @@ func handleGetVaults(ctx context.Context, r c.Req, uID string) (c.Res, error) {
 	return c.JSON(vaults)
 }
 
-func handleCreateVault(ctx context.Context, r c.Req, uID string) (c.Res, error) {
-	vault := c.NewVault(r.Body, uID)
+func handleCreateVault(ctx context.Context, name, uID string) (c.Res, error) {
+	vault := c.NewVault(name, uID)
 	item, _ := attributevalue.MarshalMap(c.MapS{
 		"PK":           "U#" + vault.UserID,
 		"SK":           "V#" + vault.ID,
-		"id":           vault.ID,
 		"display_name": vault.DisplayName,
 	})
 
@@ -55,10 +54,10 @@ func handleCreateVault(ctx context.Context, r c.Req, uID string) (c.Res, error) 
 		panic(err)
 	}
 
-	return c.JSON(vault, 201)
+	return c.Text(vault.ID, 201)
 }
 
-func handleUpdateVault(ctx context.Context, r c.Req, uID, vID string) (c.Res, error) {
+func handleUpdateVault(ctx context.Context, name, uID, vID string) (c.Res, error) {
 	key, _ := attributevalue.MarshalMap(c.MapS{
 		"PK": "U#" + uID,
 		"SK": "V#" + vID,
@@ -66,7 +65,7 @@ func handleUpdateVault(ctx context.Context, r c.Req, uID, vID string) (c.Res, er
 
 	expr, _ := attributevalue.MarshalMap(c.MapS{
 		// r.Body is the new display name
-		":d": r.Body,
+		":d": name,
 	})
 
 	_, err := ddbClient.UpdateItem(ctx, &dynamodb.UpdateItemInput{
@@ -88,7 +87,7 @@ func handleUpdateVault(ctx context.Context, r c.Req, uID, vID string) (c.Res, er
 	return c.Status(204)
 }
 
-func handleDeleteVault(ctx context.Context, r c.Req, uID, vID string) (c.Res, error) {
+func handleDeleteVault(ctx context.Context, uID, vID string) (c.Res, error) {
 	vaultKey, _ := attributevalue.MarshalMap(c.MapS{
 		"PK": "U#" + uID,
 		"SK": "V#" + vID,

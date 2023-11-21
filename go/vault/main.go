@@ -23,13 +23,13 @@ func handler(ctx context.Context, r c.Req) (c.Res, error) {
 
 	switch r.HTTPMethod {
 	case http.MethodGet:
-		return handleGetVaults(ctx, r, uID)
+		return handleGetVaults(ctx, uID)
 	case http.MethodPost:
-		return handleCreateVault(ctx, r, uID)
+		return handleCreateVault(ctx, r.Body, uID)
 	case http.MethodPatch:
-		return handleUpdateVault(ctx, r, uID, vID)
+		return handleUpdateVault(ctx, r.Body, uID, vID)
 	case http.MethodDelete:
-		return handleDeleteVault(ctx, r, uID, vID)
+		return handleDeleteVault(ctx, uID, vID)
 	default:
 		return c.Text("", 405)
 	}
@@ -48,9 +48,9 @@ func main() {
 func writeVaultInterceptor(h c.Handler) c.Handler {
 	return func(ctx context.Context, r c.Req) (c.Res, error) {
 		if http.MethodPost == r.HTTPMethod || http.MethodPatch == r.HTTPMethod {
-			m := "Vault display name must be between 3 and 32 characters"
-			if msg, ok := v.Length(r.Body, 2, 32, m); !ok {
-				return c.Text(msg, 400)
+			m := "Vault display name must be between 3 and 255 characters"
+			if !v.Length(r.Body, 3, 255) {
+				return c.Text(m, 400)
 			}
 		}
 
