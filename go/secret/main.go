@@ -81,29 +81,29 @@ func main() {
 func getErrors(errs validator.ValidationErrors) []string {
 	errorList := make([]string, len(errs))
 
-	for i := 0; i < len(errs); i++ {
-		switch errs[i].Field() {
+	for j := 0; j < len(errs); j++ {
+		switch errs[j].Field() {
 		case "DisplayName":
-			errorList[i] = "Display name must be between 3 and 255 characters and required"
+			errorList[j] = "Display name must be between 3 and 255 characters and required"
 		case "URI":
-			errorList[i] = "URI must be between 3 and 255 characters"
+			errorList[j] = "URI must be between 3 and 255 characters"
 		case "Username":
-			errorList[i] = "Username must be between 3 and 1024 characters"
+			errorList[j] = "Username must be between 3 and 1024 characters"
 		case "Password":
-			errorList[i] = "Password must be between 3 and 1024 characters"
+			errorList[j] = "Password must be between 3 and 1024 characters"
 		case "Metadata":
-			errorList[i] = "Metadata must be between 1 and 5 items"
+			errorList[j] = "Metadata must be between 1 and 5 items"
 		default:
-			md := errs[i].Namespace()[20:]
-			field := errs[i].Field()
+			md := errs[j].Namespace()[20:]
+			field := errs[j].Field()
 
 			switch field {
 			case "Key":
-				errorList[i] = md + " must be between 1 and 255 characters"
+				errorList[j] = md + " must be between 1 and 255 characters"
 			case "Value":
-				errorList[i] = md + " must be between 1 and 255 characters"
+				errorList[j] = md + " must be between 1 and 255 characters"
 			case "Type":
-				errorList[i] = md + " must be one of 0, 1, 2. If not specified, 0 is assumed"
+				errorList[j] = md + " must be one of 0, 1, 2. If not specified, 0 is assumed"
 			}
 		}
 	}
