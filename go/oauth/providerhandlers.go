@@ -4,9 +4,11 @@ import (
 	"context"
 	"github.com/go-resty/resty/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 	c "lambda/common"
 	"log"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -23,19 +25,23 @@ type googleClaims struct {
 	Verified bool   `json:"email_verified"`
 }
 
-func handleGoogle(ctx context.Context, r c.Req) (c.Res, error) {
-	mfaCh := r.Headers["X-Mfa-Challenge"]
-	if "" == mfaCh {
-		return c.Text("X-Mfa-Challenge header is required", 401)
-	}
-
-	agent, ip := r.RequestContext.Identity.UserAgent, r.RequestContext.Identity.SourceIP
-	if "" == agent {
-		return c.Text("User-Agent header is required", 401)
-	}
-
+func handleGoogle(ctx context.Context, r c.Req, agent, ip, mfaCh string) (c.Res, error) {
 	respBody := &googleResp{}
-	oauthCode := r.Body
+
+	body := strings.SplitN(r.Body, "\n", 2)
+
+	if len(body) != 2 {
+		return c.Text("Malformed request body", 400)
+	}
+
+	oauthCode := body[0]
+	plainPass := body[1]
+
+	if !isValidPass(plainPass) {
+		return c.Text("Password must match "+
+			"^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{12,73}$ pattern", 400)
+	}
+
 	resp, err := googleClient.R().SetFormData(c.MapS{
 		"code":          oauthCode,
 		"client_id":     os.Getenv("GOOGLE_CLIENT_ID"),
@@ -63,17 +69,24 @@ func handleGoogle(ctx context.Context, r c.Req) (c.Res, error) {
 		return c.Text("Email address is not verified", 401)
 	}
 
-	userMfa := getMfaSecret(ctx, ddbClient, claims.Email)
+	user := getUser(ctx, ddbClient, claims.Email)
 
-	if "" == userMfa {
+	if nil == user {
 		otpSecret := genOtp(oauthCode[len(oauthCode)-10:], "#")
 		if !verifyTotp(mfaCh, otpSecret) {
-			return c.Text("Invalid MFA code", 401)
+			return c.Status(401)
 		}
 
-		user := c.NewUser(claims.Email)
-		user.MFASecret = otpSecret
-		if nil != registerUserWithSeed(ctx, ddbClient, user) {
+		newUser := c.NewUser(claims.Email)
+		newUser.MFASecret = otpSecret
+		passHash, err := bcrypt.GenerateFromPassword([]byte(plainPass), bcrypt.DefaultCost)
+
+		if nil != err {
+			log.Println("failed to hash password: ", err)
+			return c.Text("Failed to register user. Please try again later", 503)
+		}
+
+		if nil != saveUser(ctx, ddbClient, newUser, string(passHash)) {
 			return c.Text("Failed to register user. Please try again later", 503)
 		}
 
@@ -81,8 +94,13 @@ func handleGoogle(ctx context.Context, r c.Req) (c.Res, error) {
 		return c.Text(saveSession(ctx, ddbClient, sess), 201)
 	}
 
-	if !verifyTotp(mfaCh, userMfa) {
-		return c.Text("Invalid MFA code", 401)
+	if !verifyTotp(mfaCh, user.MFASecret) {
+		return c.Status(401)
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.PassHash), []byte(plainPass))
+	if nil != err {
+		return c.Status(401)
 	}
 
 	sess := c.NewSession(agent, ip, claims.Email)

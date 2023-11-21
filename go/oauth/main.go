@@ -6,18 +6,28 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/pquerna/otp/totp"
 	c "lambda/common"
 	"time"
+	"unicode"
 )
 
 func handler(ctx context.Context, r c.Req) (c.Res, error) {
 	provider := r.PathParameters["provider"]
 
+	agent, ip := r.RequestContext.Identity.UserAgent, r.RequestContext.Identity.SourceIP
+	if "" == agent {
+		return c.Text("User-Agent header is required", 401)
+	}
+
+	mfaCh := r.Headers["X-Mfa-Challenge"]
+	if "" == mfaCh {
+		return c.Text("X-Mfa-Challenge header is required", 401)
+	}
+
 	switch provider {
 	case "google":
-		return handleGoogle(ctx, r)
+		return handleGoogle(ctx, r, agent, ip, mfaCh)
 	default:
 		return c.Text("Invalid provider", 400)
 	}
@@ -27,7 +37,7 @@ func main() {
 	lambda.Start(handler)
 }
 
-func getMfaSecret(ctx context.Context, ddb *dynamodb.Client, id string) string {
+func getUser(ctx context.Context, ddb *dynamodb.Client, id string) *c.User {
 	key, _ := attributevalue.MarshalMap(c.MapS{
 		"PK": "U#" + id,
 		"SK": "U#" + id,
@@ -36,61 +46,36 @@ func getMfaSecret(ctx context.Context, ddb *dynamodb.Client, id string) string {
 	resp, err := ddb.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName:            c.TableName,
 		Key:                  key,
-		ProjectionExpression: aws.String("mfa_secret"),
+		ProjectionExpression: aws.String("mfa_secret, pass_hash"),
 	})
 
 	if nil != err {
 		panic(err)
 	}
 
+	if nil == resp.Item {
+		return nil
+	}
+
 	u := &c.User{}
 
 	attributevalue.UnmarshalMap(resp.Item, u)
 
-	return u.MFASecret
+	return u
 }
 
 // registerUserWithSeed registers the user in DynamoDB with a seed vault and secret
-func registerUserWithSeed(ctx context.Context, ddb *dynamodb.Client, u *c.User) error {
+func saveUser(ctx context.Context, ddb *dynamodb.Client, u *c.User, passHash string) error {
 	uItem, _ := attributevalue.MarshalMap(c.MapS{
 		"PK":         "U#" + u.Email,
 		"SK":         "U#" + u.Email,
 		"mfa_secret": u.MFASecret,
+		"pass_hash":  passHash,
 	})
 
-	v := c.NewVault("My First Vault", u.Email)
-	vItem, _ := attributevalue.MarshalMap(c.MapS{
-		"PK":           "U#" + u.Email,
-		"SK":           "V#" + v.ID,
-		"display_name": v.DisplayName,
-	})
-
-	s := c.NewSecret("My Google Account", "https://google.com", "example@gmail.com", "s3cr3t_p455w0rd!", v.ID)
-
-	sItem, _ := attributevalue.MarshalMap(c.MapA{
-		"PK":           "V#" + v.ID,
-		"SK":           "U#" + u.Email + "#SC#" + s.ID,
-		"display_name": s.DisplayName,
-		"uri":          s.URI,
-		"username":     s.Username,
-		"password":     s.Password,
-		"metadata": []*c.Metadatum{
-			c.NewMetadatum("My MFA Secret", "JBSWY3DPEHPK3PXP", c.MetadatumTypeMFA),
-			c.NewMetadatum("Example Note", "This is a plain-text note", c.MetadatumTypeText),
-			c.NewMetadatum("My Confidential Note", "This should not appear on UI", c.MetadatumTypeConfidential),
-		},
-	})
-
-	batch := []types.WriteRequest{
-		{PutRequest: &types.PutRequest{Item: uItem}},
-		{PutRequest: &types.PutRequest{Item: vItem}},
-		{PutRequest: &types.PutRequest{Item: sItem}},
-	}
-
-	_, err := ddb.BatchWriteItem(ctx, &dynamodb.BatchWriteItemInput{
-		RequestItems: c.MapL[[]types.WriteRequest]{
-			*c.TableName: batch,
-		},
+	_, err := ddb.PutItem(ctx, &dynamodb.PutItemInput{
+		TableName: c.TableName,
+		Item:      uItem,
 	})
 
 	return err
@@ -135,4 +120,31 @@ func verifyTotp(pass, secret string) bool {
 	})
 
 	return valid
+}
+
+func isValidPass(s string) bool {
+	var (
+		correctLength = false
+		hasUpper      = false
+		hasLower      = false
+		hasNumber     = false
+		hasSpecial    = false
+	)
+
+	if len(s) > 11 && len(s) < 73 {
+		correctLength = true
+	}
+	for _, char := range s {
+		switch {
+		case unicode.IsUpper(char):
+			hasUpper = true
+		case unicode.IsLower(char):
+			hasLower = true
+		case unicode.IsNumber(char):
+			hasNumber = true
+		case unicode.IsPunct(char) || unicode.IsSymbol(char):
+			hasSpecial = true
+		}
+	}
+	return correctLength && hasUpper && hasLower && hasNumber && hasSpecial
 }
