@@ -1,7 +1,7 @@
 # Deploy terraform commands
 # Setup Terraform from github actions @actions/terraform or something like that && Terraform Init && Terraform Plan && Terraform Apply
 
-GO_FNS = oauth vault
+GO_FNS = oauth vault secret
 build_go: test_go
 	@cd go && \
 	$(foreach fn,$(GO_FNS), \
