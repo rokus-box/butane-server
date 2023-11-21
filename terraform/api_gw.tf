@@ -3,7 +3,7 @@ resource "aws_apigatewayv2_api" "http" {
   description   = "Example API. Delete this after you're done with it."
   protocol_type = "HTTP"
   cors_configuration {
-    allow_headers = ["X-Mfa-Challenge", "Authorization"]
+    allow_headers = ["X-Mfa-Challenge", "Authorization", "Content-Type"]
     allow_methods = ["OPTIONS", "GET", "POST", "PATCH", "DELETE"]
     allow_origins = ["http://localhost:4200"]
   }
