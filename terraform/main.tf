@@ -16,6 +16,11 @@ variable "functions" {
       runtime     = "provided.al2"
       description = "Vault handler to retrieve Vaults of the authenticated user"
     }
+    secret = {
+      handler     = "bootstrap"
+      runtime     = "provided.al2"
+      description = "Secret handler to retrieve Secrets of the authenticated user"
+    }
     sessions = {
       handler     = "app.handler"
       runtime     = "nodejs18.x"
@@ -34,6 +39,11 @@ variable "endpoints" {
     "vault;GET /vault",
     "vault;POST /vault",
     "vault;PATCH /vault/{id}",
+    # Secret
+    "secret;GET /vault/{vaultId}/secret",
+    "secret;POST /vault/{vaultId}/secret",
+    "secret;PATCH /vault/{vaultId}/secret/{id}",
+    "secret;DELETE /vault/{vaultId}/secret/{id}",
     # Session
     "session;GET /session",
     "session;DELETE /session/{id}",
