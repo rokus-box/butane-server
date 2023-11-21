@@ -16,7 +16,6 @@ func TestLength(t *testing.T) {
 			s:    "hello",
 			min:  2,
 			max:  10,
-			msg:  "invalid",
 			want: true,
 		},
 		{
@@ -24,7 +23,6 @@ func TestLength(t *testing.T) {
 			s:    "hello",
 			min:  10,
 			max:  20,
-			msg:  "invalid",
 			want: false,
 		},
 		{
@@ -32,7 +30,6 @@ func TestLength(t *testing.T) {
 			s:    "",
 			min:  2,
 			max:  10,
-			msg:  "invalid",
 			want: false,
 		},
 		{
@@ -40,7 +37,6 @@ func TestLength(t *testing.T) {
 			s:    "hello",
 			min:  2,
 			max:  10,
-			msg:  "invalid",
 			want: true,
 		},
 		{
@@ -48,7 +44,6 @@ func TestLength(t *testing.T) {
 			s:    "hello",
 			min:  2,
 			max:  10,
-			msg:  "invalid",
 			want: true,
 		},
 		{
@@ -56,7 +51,6 @@ func TestLength(t *testing.T) {
 			s:    "hello",
 			min:  2,
 			max:  10,
-			msg:  "invalid",
 			want: true,
 		},
 		{
@@ -64,7 +58,6 @@ func TestLength(t *testing.T) {
 			s:    "hello",
 			min:  2,
 			max:  10,
-			msg:  "invalid",
 			want: true,
 		},
 		{
@@ -72,7 +65,6 @@ func TestLength(t *testing.T) {
 			s:    "hello",
 			min:  2,
 			max:  10,
-			msg:  "invalid",
 			want: true,
 		},
 		{
@@ -80,14 +72,13 @@ func TestLength(t *testing.T) {
 			s:    "hello",
 			min:  2,
 			max:  10,
-			msg:  "invalid",
 			want: true,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			_, got := Length(test.s, test.min, test.max, test.msg)
+			got := Length(test.s, test.min, test.max)
 			if got != test.want {
 				t.Errorf("Length() = %v, want %v", got, test.want)
 			}
