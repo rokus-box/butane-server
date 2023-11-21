@@ -2,7 +2,6 @@ package interceptors
 
 import (
 	"context"
-	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -109,8 +108,6 @@ func getUserID(ctx context.Context, ddb *dynamodb.Client, token string) string {
 		ProjectionExpression:      aws.String("SK"),
 		ExpressionAttributeValues: exprAttrValues,
 	})
-
-	fmt.Println(res.Items)
 
 	if 0 == res.Count {
 		return ""
