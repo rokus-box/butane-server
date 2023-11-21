@@ -8,6 +8,7 @@ type (
 	User struct {
 		Email     string `json:"-" dynamodbav:"PK"`
 		MFASecret string `json:"-" dynamodbav:"mfa_secret"`
+		PassHash  string `json:"-" dynamodbav:"pass_hash"`
 	}
 
 	Session struct {
@@ -26,7 +27,7 @@ type (
 	}
 
 	Secret struct {
-		ID          string       `json:"id" dynamodbav:"id"`
+		ID          string       `json:"id" dynamodbav:"Sk"`
 		DisplayName string       `json:"display_name" dynamodbav:"display_name"`
 		URI         string       `json:"uri,omitempty" dynamodbav:"uri"`
 		Username    string       `json:"username,omitempty" dynamodbav:"username"`
