@@ -12,12 +12,9 @@ type (
 	}
 
 	Session struct {
-		UserAgent string    `json:"user_agent" dynamodbav:"user_agent"`
-		IPAddress string    `json:"ip_address" dynamodbav:"ip_address"`
-		Timestamp time.Time `json:"timestamp" dynamodbav:"timestamp"`
-		TTL       int64     `json:"-" dynamodbav:"TTL"`
-		Token     string    `json:"-" dynamodbav:"PK"`
-		UserID    string    `json:"-" dynamodbav:"SK"`
+		TTL    int64  `json:"-" dynamodbav:"TTL"`
+		Token  string `json:"-" dynamodbav:"PK"`
+		UserID string `json:"-" dynamodbav:"SK"`
 	}
 
 	Vault struct {
@@ -109,13 +106,10 @@ func NewMetadatum(key, value string, t uint8) *Metadatum {
 }
 
 // NewSession creates a new session
-func NewSession(agent, ip, uID string) *Session {
+func NewSession(uID string) *Session {
 	return &Session{
-		Token:     HashSHA256Base64(NewID()),
-		UserAgent: agent,
-		IPAddress: ip,
-		Timestamp: time.Now(),
-		TTL:       time.Now().Add(5 * time.Second).Unix(),
-		UserID:    uID,
+		Token:  HashSHA256Base64(NewID()),
+		TTL:    time.Now().Add(5 * time.Second).Unix(),
+		UserID: uID,
 	}
 }
