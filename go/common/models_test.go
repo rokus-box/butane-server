@@ -89,37 +89,19 @@ func TestNewMetadatum(t *testing.T) {
 	if MetadatumTypeText != metadatum.Type {
 		t.Error("metadatum type is not set")
 	}
-
-	if 0 != MetadatumTypeText || 1 != MetadatumTypeMFA || 2 != MetadatumTypeConfidential {
-		t.Errorf("Metadatum type constants are incorrect (%d, %d, %d)", MetadatumTypeText, MetadatumTypeMFA, MetadatumTypeConfidential)
-	}
 }
 
 func TestNewSession(t *testing.T) {
-	const agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36"
-	const ip = "test ip"
 	const uID = "test user Email"
 
-	session := NewSession(agent, ip, uID)
+	session := NewSession(uID)
 
 	if "" == session.Token {
 		t.Error("session token is empty")
 	}
 
-	if agent != session.UserAgent {
-		t.Error("session user agent is not set")
-	}
-
-	if ip != session.IPAddress {
-		t.Error("session IP address is not set")
-	}
-
 	if uID != session.UserID {
 		t.Error("session user ID is not set")
-	}
-
-	if session.Timestamp.IsZero() {
-		t.Error("session timestamp cannot be empty")
 	}
 
 	if 0 == session.TTL {
