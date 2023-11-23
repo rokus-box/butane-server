@@ -45,7 +45,6 @@ variable "endpoints" {
     "secret;PATCH /vault/{vaultId}/secret/{id}",
     "secret;DELETE /vault/{vaultId}/secret/{id}",
     # Session
-    "session;GET /session",
-    "session;DELETE /session/{id}",
+    "session;DELETE /session",
   ]
 }
