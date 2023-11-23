@@ -90,7 +90,7 @@ func handleGoogle(ctx context.Context, r c.Req, agent, ip, mfaCh string) (c.Res,
 			return c.Text("Failed to register user. Please try again later", 503)
 		}
 
-		sess := c.NewSession(agent, ip, claims.Email)
+		sess := c.NewSession(claims.Email)
 		return c.Text(saveSession(ctx, ddbClient, sess), 201)
 	}
 
@@ -103,6 +103,6 @@ func handleGoogle(ctx context.Context, r c.Req, agent, ip, mfaCh string) (c.Res,
 		return c.Status(401)
 	}
 
-	sess := c.NewSession(agent, ip, claims.Email)
+	sess := c.NewSession(claims.Email)
 	return c.Text(saveSession(ctx, ddbClient, sess), 201)
 }
