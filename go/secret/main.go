@@ -66,7 +66,7 @@ func handler(ctx context.Context, r c.Req) (c.Res, error) {
 	case http.MethodDelete:
 		return handleDeleteSecret(ctx, uID, vID, sID)
 	default:
-		return c.Text("", 405)
+		return c.Status(405)
 	}
 }
 
