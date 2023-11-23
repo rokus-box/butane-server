@@ -11,7 +11,11 @@ import (
 const NanoIDLength = 21
 
 func NewID() string {
-	nanoid, _ := gonanoid.Nanoid()
+	nanoid, err := gonanoid.Nanoid(NanoIDLength)
+
+	if nil != err {
+		panic("error generating nanoid: " + err.Error())
+	}
 
 	return nanoid
 }
