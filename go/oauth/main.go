@@ -66,11 +66,13 @@ func getUser(ctx context.Context, ddb *dynamodb.Client, id string) *c.User {
 
 // registerUserWithSeed registers the user in DynamoDB with a seed vault and secret
 func saveUser(ctx context.Context, ddb *dynamodb.Client, u *c.User, passHash string) error {
-	uItem, _ := attributevalue.MarshalMap(c.MapS{
-		"PK":         "U#" + u.Email,
-		"SK":         "U#" + u.Email,
-		"mfa_secret": u.MFASecret,
-		"pass_hash":  passHash,
+	uItem, _ := attributevalue.MarshalMap(c.MapA{
+		"PK":           "U#" + u.Email,
+		"SK":           "U#" + u.Email,
+		"mfa_secret":   u.MFASecret,
+		"pass_hash":    passHash,
+		"vault_count":  u.VaultCount,
+		"secret_count": u.SecretCount,
 	})
 
 	_, err := ddb.PutItem(ctx, &dynamodb.PutItemInput{

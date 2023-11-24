@@ -6,9 +6,11 @@ import (
 
 type (
 	User struct {
-		Email     string `json:"-" dynamodbav:"PK"`
-		MFASecret string `json:"-" dynamodbav:"mfa_secret"`
-		PassHash  string `json:"-" dynamodbav:"pass_hash"`
+		Email       string `json:"-" dynamodbav:"PK"`
+		MFASecret   string `json:"-" dynamodbav:"mfa_secret"`
+		PassHash    string `json:"-" dynamodbav:"pass_hash"`
+		VaultCount  int    `json:"-" dynamodbav:"vault_count"`
+		SecretCount int    `json:"-" dynamodbav:"secret_count"`
 	}
 
 	Session struct {

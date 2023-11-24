@@ -10,6 +10,9 @@ import (
 	"net/http"
 )
 
+// SecretLimit is string because DynamoDB stores numbers as strings.
+const SecretLimit = "180"
+
 var (
 	ddbClient = c.NewDDB()
 	validate  = validator.New(validator.WithRequiredStructEnabled())

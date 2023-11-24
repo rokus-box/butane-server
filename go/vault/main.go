@@ -11,6 +11,9 @@ import (
 
 var ddbClient = c.NewDDB()
 
+// VaultLimit is string because DynamoDB stores numbers as strings.
+const VaultLimit = "9"
+
 func handler(ctx context.Context, r c.Req) (c.Res, error) {
 	uID := ctx.Value(c.UserIDKey).(string)
 	vID := r.PathParameters["id"]
