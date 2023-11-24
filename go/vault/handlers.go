@@ -107,43 +107,47 @@ func handleDeleteVault(ctx context.Context, uID, vID string) (c.Res, error) {
 		panic(err)
 	}
 
-	secretsKey, _ := attributevalue.MarshalMap(c.MapS{
-		":pk": "V#" + vID,
-		":sk": "U#" + uID + "#SC",
-	})
+	go func() {
+		secretsKey, _ := attributevalue.MarshalMap(c.MapS{
+			":pk": "V#" + vID,
+			":sk": "U#" + uID + "#SC",
+		})
 
-	res, err := ddbClient.Query(ctx, &dynamodb.QueryInput{
-		TableName:                 c.TableName,
-		KeyConditionExpression:    aws.String("PK = :pk AND begins_with(SK, :sk)"),
-		ProjectionExpression:      aws.String("PK, SK"),
-		ExpressionAttributeValues: secretsKey,
-	})
+		ctx := context.Background()
 
-	if nil != err {
-		panic(err)
-	}
-
-	if len(res.Items) > 0 {
-		var batch []types.WriteRequest
-
-		for _, item := range res.Items {
-			batch = append(batch, types.WriteRequest{
-				DeleteRequest: &types.DeleteRequest{
-					Key: item,
-				},
-			})
-		}
-
-		_, err = ddbClient.BatchWriteItem(ctx, &dynamodb.BatchWriteItemInput{
-			RequestItems: c.MapL[[]types.WriteRequest]{
-				*c.TableName: batch,
-			},
+		res, err := ddbClient.Query(ctx, &dynamodb.QueryInput{
+			TableName:                 c.TableName,
+			KeyConditionExpression:    aws.String("PK = :pk AND begins_with(SK, :sk)"),
+			ProjectionExpression:      aws.String("PK, SK"),
+			ExpressionAttributeValues: secretsKey,
 		})
 
 		if nil != err {
 			panic(err)
 		}
-	}
+
+		if len(res.Items) > 0 {
+			var batch []types.WriteRequest
+
+			for _, item := range res.Items {
+				batch = append(batch, types.WriteRequest{
+					DeleteRequest: &types.DeleteRequest{
+						Key: item,
+					},
+				})
+			}
+
+			_, err = ddbClient.BatchWriteItem(ctx, &dynamodb.BatchWriteItemInput{
+				RequestItems: c.MapL[[]types.WriteRequest]{
+					*c.TableName: batch,
+				},
+			})
+
+			if nil != err {
+				panic(err)
+			}
+		}
+	}()
 
 	return c.Status(204)
 }
