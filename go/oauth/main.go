@@ -20,7 +20,7 @@ func handler(ctx context.Context, r c.Req) (c.Res, error) {
 		return c.Text("User-Agent header is required", 401)
 	}
 
-	mfaCh := r.Headers["X-Mfa-Challenge"]
+	mfaCh := r.Headers["x-mfa-challenge"]
 	if "" == mfaCh {
 		return c.Text("X-Mfa-Challenge header is required", 401)
 	}
