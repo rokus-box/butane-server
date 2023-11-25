@@ -81,7 +81,7 @@ func Recover(h c.Handler) c.Handler {
 func Auth(ddb *dynamodb.Client) func(h c.Handler) c.Handler {
 	return func(h c.Handler) c.Handler {
 		return func(ctx context.Context, r c.Req) (c.Res, error) {
-			token := r.Headers["Authorization"]
+			token := r.Headers["authorization"]
 			uID := getUserID(ctx, ddb, token)
 
 			if "" == uID {
