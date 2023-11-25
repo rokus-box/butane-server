@@ -109,12 +109,12 @@ func getUserID(ctx context.Context, ddb *dynamodb.Client, token string) string {
 		ExpressionAttributeValues: exprAttrValues,
 	})
 
-	if 0 == res.Count {
-		return ""
-	}
-
 	if nil != err {
 		panic(err)
+	}
+
+	if 0 == res.Count {
+		return ""
 	}
 
 	sess := c.Session{}
