@@ -31,7 +31,7 @@ async function getUserId(dynamoDB, token) {
       ':pk': { S: 'SS#' + token },
     },
   }).catch((error) => {
-    console.error('error getting sessions', error);
+    console.error('error getting session', error);
   });
 
   if (0 === sessionsRes.Items.length) {

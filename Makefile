@@ -15,7 +15,7 @@ test_go:
 
 
 # TODO: Delete tests folder too
-NODE_FNS = sessions
+NODE_FNS = session
 build_node:
 	@cd node && \
 	$(foreach fn,$(NODE_FNS), \
