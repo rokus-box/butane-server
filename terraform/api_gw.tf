@@ -15,22 +15,22 @@ resource "aws_apigatewayv2_stage" "prod" {
   name        = "prod"
 }
 
-#
-#resource "aws_apigatewayv2_integration" "lambdas" {
-#  for_each           = var.functions
-#  api_id             = aws_apigatewayv2_api.http.id
-#  integration_uri    = aws_lambda_function.lambdas[each.key].invoke_arn
-#  integration_method = "POST"
-#  integration_type   = "AWS_PROXY"
-#}
-#
-#resource "aws_apigatewayv2_route" "lambdas" {
-#  for_each  = toset(var.endpoints)
-#  api_id    = aws_apigatewayv2_api.http.id
-#  route_key = split(";", each.value)[1]
-#  target    = "integrations/${aws_apigatewayv2_integration.lambdas[split(";", each.value)[0]].id}"
-#}
-#
+
+resource "aws_apigatewayv2_integration" "lambdas" {
+  for_each           = var.functions
+  api_id             = aws_apigatewayv2_api.http.id
+  integration_uri    = aws_lambda_function.lambdas[each.key].invoke_arn
+  integration_method = "POST"
+  integration_type   = "AWS_PROXY"
+}
+
+resource "aws_apigatewayv2_route" "lambdas" {
+  for_each  = toset(var.endpoints)
+  api_id    = aws_apigatewayv2_api.http.id
+  route_key = split(";", each.value)[1]
+  target    = "integrations/${aws_apigatewayv2_integration.lambdas[split(";", each.value)[0]].id}"
+}
+
 
 resource "aws_lambda_permission" "api_gw" {
   for_each      = var.functions
