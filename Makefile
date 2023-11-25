@@ -10,7 +10,7 @@ build_go: test_go
         rm -f $(fn)/bootstrap; \
 	)
 
-test_go:
+test_go: build_node
 	@cd go && go test -cover ./... || exit;
 
 
