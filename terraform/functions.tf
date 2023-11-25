@@ -21,8 +21,14 @@ resource "aws_iam_role_policy" "delete_later_policy" {
     Version   = "2012-10-17"
     Statement = [
       {
-        Sid      = ""
+        Sid      = "LogsAccess"
         Action   = "logs:*"
+        Effect   = "Allow"
+        Resource = "*"
+      },
+      {
+        Sid      = "DynamoDBAccess"
+        Action   = "dynamodb:*"
         Effect   = "Allow"
         Resource = "*"
       }
