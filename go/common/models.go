@@ -14,9 +14,9 @@ type (
 	}
 
 	Session struct {
-		TTL    int64  `json:"-" dynamodbav:"TTL"`
-		Token  string `json:"-" dynamodbav:"PK"`
-		UserID string `json:"-" dynamodbav:"SK"`
+		DeleteAfter int64  `json:"-" dynamodbav:"delete_after"`
+		Token       string `json:"-" dynamodbav:"PK"`
+		UserID      string `json:"-" dynamodbav:"SK"`
 	}
 
 	Vault struct {
@@ -110,8 +110,8 @@ func NewMetadatum(key, value string, t uint8) *Metadatum {
 // NewSession creates a new session
 func NewSession(uID string) *Session {
 	return &Session{
-		Token:  HashSHA256Base64(NewID()),
-		TTL:    time.Now().Add(5 * time.Second).Unix(),
-		UserID: uID,
+		Token:       HashSHA256Base64(NewID()),
+		DeleteAfter: time.Now().Add(10 * time.Second).Unix(),
+		UserID:      uID,
 	}
 }
