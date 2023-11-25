@@ -8,7 +8,7 @@ const dynamoDB = new DynamoDB({
 });
 
 export const handler = async (event) => {
-  const token = event.headers['Authorization'];
+  const token = event.headers['authorization'];
   if (null == token) {
     return status(401);
   }
