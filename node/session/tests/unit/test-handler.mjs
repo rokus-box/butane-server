@@ -1,6 +1,5 @@
 'use strict';
 
-import { handler } from '../../app.mjs';
 import { expect } from 'chai';
 
 describe('Tests index', function () {

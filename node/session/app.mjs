@@ -1,6 +1,6 @@
 'use strict';
 import { DynamoDB } from '@aws-sdk/client-dynamodb';
-import {  status } from './util.mjs';;
+import {  status } from './util.mjs';
 
 const TABLE_NAME = process.env.TABLE_NAME;
 const dynamoDB = new DynamoDB({
