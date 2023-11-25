@@ -23,6 +23,7 @@ override.tf.json
 terraform.rc
 terraform/outputs/
 terraform/*_testing.tf
+terraform/.terraform*
 
 **.aws-sam-iacs/
 
