@@ -8,23 +8,23 @@ variable "functions" {
   default     = {
     oauth = {
       handler     = "bootstrap"
-      runtime     = "provided.al2"
+      runtime     = "provided.al2023"
       description = "OAuth handler to authenticate users with external OAuth providers"
     }
     vault = {
       handler     = "bootstrap"
-      runtime     = "provided.al2"
-      description = "Vault handler to retrieve Vaults of the authenticated user"
+      runtime     = "provided.al2023"
+      description = "Handles CRUD operations for Vaults of the authenticated user"
     }
     secret = {
       handler     = "bootstrap"
-      runtime     = "provided.al2"
-      description = "Secret handler to retrieve Secrets of the authenticated user"
+      runtime     = "provided.al2023"
+      description = "Handles CRUD operations for Secrets of the authenticated user"
     }
-    sessions = {
+    session = {
       handler     = "app.handler"
-      runtime     = "nodejs18.x"
-      description = "Greets the world"
+      runtime     = "nodejs20.x"
+      description = "Handles CRUD operations for Sessions of the authenticated user"
     }
   }
 }
