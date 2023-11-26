@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/go-resty/resty/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -100,6 +102,33 @@ func handleGoogle(ctx context.Context, r c.Req, agent, ip, mfaCh string) (c.Res,
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.PassHash), []byte(plainPass))
 	if nil != err {
+		al := &c.AuditLog{
+			UserID:    claims.Email,
+			Timestamp: time.Now(),
+			Resource:  c.ResourceSession,
+			Action:    c.ActionCreate,
+			Message:   "Failed attempt to login with Google",
+			Data:      c.MapS{"agent": agent, "ip": ip},
+		}
+
+		item, _ := attributevalue.MarshalMap(c.MapA{
+			"PK":       "U#" + al.UserID,
+			"SK":       "AL#" + al.Timestamp.Format(time.RFC3339Nano),
+			"action":   al.Action,
+			"resource": al.Resource,
+			"message":  al.Message,
+			"data":     al.Data,
+		})
+
+		_, err := ddbClient.PutItem(ctx, &dynamodb.PutItemInput{
+			TableName: c.TableName,
+			Item:      item,
+		})
+
+		if nil != err {
+			panic(err)
+		}
+
 		return c.Status(401)
 	}
 
