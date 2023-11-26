@@ -112,12 +112,13 @@ func handleGoogle(ctx context.Context, r c.Req, agent, ip, mfaCh string) (c.Res,
 		}
 
 		item, _ := attributevalue.MarshalMap(c.MapA{
-			"PK":       "U#" + al.UserID,
-			"SK":       "AL#" + al.Timestamp.Format(time.RFC3339Nano),
-			"action":   al.Action,
-			"resource": al.Resource,
-			"message":  al.Message,
-			"data":     al.Data,
+			"PK":           "U#" + al.UserID,
+			"SK":           "AL#" + al.Timestamp.Format(time.RFC3339Nano),
+			"action":       al.Action,
+			"resource":     al.Resource,
+			"message":      al.Message,
+			"data":         al.Data,
+			"delete_after": time.Now().Add(time.Hour * 24 * 20).Unix(),
 		})
 
 		_, err := ddbClient.PutItem(ctx, &dynamodb.PutItemInput{

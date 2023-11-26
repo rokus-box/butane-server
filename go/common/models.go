@@ -42,11 +42,11 @@ type (
 	}
 
 	AuditLog struct {
-		Data      any       `json:"data"`
-		Action    uint8     `json:"action"`
-		Resource  uint8     `json:"resource"`
-		Message   string    `json:"message"`
-		Timestamp time.Time `json:"timestamp"`
+		Data      any       `json:"data,omitempty" dynamodbav:"data"`
+		Action    uint8     `json:"action" dynamodbav:"action"`
+		Resource  uint8     `json:"resource" dynamodbav:"resource"`
+		Message   string    `json:"message" dynamodbav:"message"`
+		Timestamp time.Time `json:"timestamp" dynamodbav:"SK"`
 		UserID    string    `json:"-"`
 	}
 )

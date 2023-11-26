@@ -86,9 +86,10 @@ func saveUser(ctx context.Context, ddb *dynamodb.Client, u *c.User, passHash str
 // saveSession saves the session to DynamoDB and returns the token
 func saveSession(ctx context.Context, ddb *dynamodb.Client, s *c.Session) string {
 	item, _ := attributevalue.MarshalMap(c.MapA{
-		"PK":     "SS#" + s.Token,
-		"SK":     s.UserID,
-		"expiry": s.Expiry,
+		"PK":           "SS#" + s.Token,
+		"SK":           s.UserID,
+		"expiry":       s.Expiry,
+		"delete_after": time.Now().Add(time.Hour * 24 * 2).Unix(),
 	})
 
 	_, err := ddb.PutItem(ctx, &dynamodb.PutItemInput{
