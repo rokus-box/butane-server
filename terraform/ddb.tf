@@ -38,6 +38,11 @@ resource "aws_lambda_function" "session_log" {
   description      = "Handles DynamoDB stream events and logs write actions to DynamoDB"
   role             = aws_iam_role.delete_later_role.arn
   source_code_hash = filebase64sha256("outputs/${local.fn_name}.zip")
+  environment {
+    variables = {
+      TABLE_NAME = aws_dynamodb_table.butane_table.name
+    }
+  }
 }
 
 resource "aws_iam_role_policy" "session_log" {
