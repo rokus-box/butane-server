@@ -107,6 +107,22 @@ func NewMetadatum(key, value string, t uint8) *Metadatum {
 	}
 }
 
+func NewAuditLog(uID, msg string, rType, aType uint8, data ...any) *AuditLog {
+	al := &AuditLog{
+		UserID:    uID,
+		Timestamp: time.Now(),
+		Resource:  rType,
+		Action:    aType,
+		Message:   msg,
+	}
+
+	if len(data) > 0 {
+		al.Data = data[0]
+	}
+
+	return al
+}
+
 // NewSession creates a new session
 func NewSession(uID string) *Session {
 	return &Session{

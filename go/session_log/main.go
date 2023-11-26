@@ -16,11 +16,7 @@ var ddbClient = c.NewDDB()
 
 func handler(ctx context.Context, ev events.DynamoDBEvent) {
 	for _, record := range ev.Records {
-		al := &c.AuditLog{
-			UserID:    record.Change.Keys["SK"].String(),
-			Timestamp: time.Now(),
-			Resource:  c.ResourceSession,
-		}
+		al := c.NewAuditLog(record.Change.Keys["SK"].String(), "", c.ResourceSession, c.ActionCreate)
 
 		switch record.EventName {
 		case "INSERT":

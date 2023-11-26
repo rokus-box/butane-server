@@ -148,3 +148,5 @@ func isValidPass(s string) bool {
 	}
 	return correctLength && hasUpper && hasLower && hasNumber && hasSpecial
 }
+
+var passErrStr = "Password must match ^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{12,73}$ pattern"

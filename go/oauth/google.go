@@ -40,8 +40,7 @@ func handleGoogle(ctx context.Context, r c.Req, agent, ip, mfaCh string) (c.Res,
 	plainPass := body[1]
 
 	if !isValidPass(plainPass) {
-		return c.Text("Password must match "+
-			"^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{12,73}$ pattern", 400)
+		return c.Text(passErrStr, 400)
 	}
 
 	resp, err := googleClient.R().SetFormData(c.MapS{
@@ -102,14 +101,7 @@ func handleGoogle(ctx context.Context, r c.Req, agent, ip, mfaCh string) (c.Res,
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.PassHash), []byte(plainPass))
 	if nil != err {
-		al := &c.AuditLog{
-			UserID:    claims.Email,
-			Timestamp: time.Now(),
-			Resource:  c.ResourceSession,
-			Action:    c.ActionCreate,
-			Message:   "Failed attempt to login with Google",
-			Data:      c.MapS{"agent": agent, "ip": ip},
-		}
+		al := c.NewAuditLog(claims.Email, "Failed attempt to login with Google", c.ResourceSession, c.ActionCreate, c.MapS{"agent": agent, "ip": ip})
 
 		item, _ := attributevalue.MarshalMap(c.MapA{
 			"PK":           "U#" + al.UserID,
