@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	c "lambda/common"
 	"log"
+	"time"
 )
 
 // HTTP interceptors for AWS Lambda functions.
@@ -78,10 +79,10 @@ func Recover(h c.Handler) c.Handler {
 
 // Auth checks if the user is authenticated. If not, a 401 is returned.
 // If the user is authenticated, the user Email is added to the context.
-func Auth(ddb *dynamodb.Client) func(h c.Handler) c.Handler {
+func Auth(ddb *dynamodb.Client) func(c.Handler) c.Handler {
 	return func(h c.Handler) c.Handler {
 		return func(ctx context.Context, r c.Req) (c.Res, error) {
-			token := r.Headers["authorization"]
+			token := r.Headers["Authorization"]
 			uID := getUserID(ctx, ddb, token)
 
 			if "" == uID {
@@ -105,7 +106,7 @@ func getUserID(ctx context.Context, ddb *dynamodb.Client, token string) string {
 	res, err := ddb.Query(ctx, &dynamodb.QueryInput{
 		TableName:                 c.TableName,
 		KeyConditionExpression:    aws.String("PK = :pk"),
-		ProjectionExpression:      aws.String("SK"),
+		ProjectionExpression:      aws.String("SK, expiry"),
 		ExpressionAttributeValues: exprAttrValues,
 	})
 
@@ -120,6 +121,41 @@ func getUserID(ctx context.Context, ddb *dynamodb.Client, token string) string {
 	sess := c.Session{}
 
 	attributevalue.UnmarshalMap(res.Items[0], &sess)
+
+	sKey, _ := attributevalue.MarshalMap(c.MapS{
+		"PK": "SS#" + token,
+		"SK": sess.UserID,
+	})
+
+	if sess.Expiry < time.Now().Unix() {
+		_, err := ddb.DeleteItem(ctx, &dynamodb.DeleteItemInput{
+			TableName: c.TableName,
+			Key:       sKey,
+		})
+
+		if nil != err {
+			panic(err)
+		}
+
+		return ""
+	}
+
+	// Update the expiry on every request
+	sess.Extend()
+	expr, _ := attributevalue.MarshalMap(c.MapA{
+		":t": sess.Expiry,
+	})
+
+	_, err = ddb.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		TableName:                 c.TableName,
+		Key:                       sKey,
+		ExpressionAttributeValues: expr,
+		UpdateExpression:          aws.String("SET expiry = :t"),
+	})
+
+	if nil != err {
+		panic(err)
+	}
 
 	return sess.UserID
 }

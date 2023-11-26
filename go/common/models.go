@@ -14,9 +14,9 @@ type (
 	}
 
 	Session struct {
-		DeleteAfter int64  `json:"-" dynamodbav:"delete_after"`
-		Token       string `json:"-" dynamodbav:"PK"`
-		UserID      string `json:"-" dynamodbav:"SK"`
+		Expiry int64  `json:"-" dynamodbav:"expiry"`
+		Token  string `json:"-" dynamodbav:"PK"`
+		UserID string `json:"-" dynamodbav:"SK"`
 	}
 
 	Vault struct {
@@ -110,8 +110,13 @@ func NewMetadatum(key, value string, t uint8) *Metadatum {
 // NewSession creates a new session
 func NewSession(uID string) *Session {
 	return &Session{
-		Token:       HashSHA256Base64(NewID()),
-		DeleteAfter: time.Now().Add(10 * time.Second).Unix(),
-		UserID:      uID,
+		Token:  HashSHA256Base64(NewID()),
+		Expiry: time.Now().Add(1 * time.Minute).Unix(),
+		UserID: uID,
 	}
+}
+
+// Extend updates the expiry of the session
+func (ss *Session) Extend() {
+	ss.Expiry = time.Now().Add(1 * time.Minute).Unix()
 }

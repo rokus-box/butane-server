@@ -104,11 +104,11 @@ func TestNewSession(t *testing.T) {
 		t.Error("session user ID is not set")
 	}
 
-	if 0 == session.DeleteAfter {
-		t.Error("session DeleteAfter cannot be empty")
+	if 0 == session.Expiry {
+		t.Error("session Expiry cannot be empty")
 	}
 
-	if time.Now().Unix() > session.DeleteAfter {
-		t.Error("session DeleteAfter cannot be in the past")
+	if time.Now().Unix() > session.Expiry {
+		t.Error("session Expiry cannot be in the past")
 	}
 }
