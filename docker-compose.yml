@@ -7,4 +7,4 @@ services:
       - "8000:8000"
     volumes:
       - "./data:/home/dynamodblocal/data"
-    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath /home/dynamodblocal/data -cors '*'"
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath . -cors '*'"
