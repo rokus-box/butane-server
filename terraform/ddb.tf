@@ -25,10 +25,10 @@ resource "aws_dynamodb_table" "butane_table" {
 }
 
 locals {
-  fn_name = "audit_log"
+  fn_name = "session_log"
 }
 
-resource "aws_lambda_function" "audit_log" {
+resource "aws_lambda_function" "session_log" {
   # Zipping the function code using `zip` executable in Makefile
   filename         = "outputs/${local.fn_name}.zip"
   timeout          = 5
@@ -40,7 +40,7 @@ resource "aws_lambda_function" "audit_log" {
   source_code_hash = filebase64sha256("outputs/${local.fn_name}.zip")
 }
 
-resource "aws_iam_role_policy" "audit_log" {
+resource "aws_iam_role_policy" "session_log" {
   name   = "${local.fn_name}_policy"
   role   = aws_iam_role.delete_later_role.id
   policy = jsonencode({
@@ -67,13 +67,13 @@ resource "aws_iam_role_policy" "audit_log" {
   })
 }
 
-resource "aws_cloudwatch_log_group" "audit_log" {
+resource "aws_cloudwatch_log_group" "session_log" {
   name              = "/aws/lambda/${local.fn_name}"
   retention_in_days = 3
 }
 
 resource "aws_lambda_event_source_mapping" "butane_table_stream" {
-  depends_on        = [aws_lambda_function.audit_log]
+  depends_on        = [aws_lambda_function.session_log]
   batch_size        = 1
   starting_position = "LATEST"
   function_name     = local.fn_name
@@ -81,6 +81,7 @@ resource "aws_lambda_event_source_mapping" "butane_table_stream" {
   filter_criteria {
     filter {
       pattern = jsonencode({
+        eventName = ["INSERT", "REMOVE"]
         dynamodb  = {
           Keys = {
             PK = {

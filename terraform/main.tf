@@ -21,6 +21,11 @@ variable "functions" {
       runtime     = "provided.al2023"
       description = "Handles CRUD operations for Secrets of the authenticated user"
     }
+    audit_log = {
+      handler     = "bootstrap"
+      runtime     = "provided.al2023"
+      description = "Handles CRUD operations for Audit Logs of the authenticated user"
+    }
     session = {
       handler     = "app.handler"
       runtime     = "nodejs20.x"
@@ -46,5 +51,7 @@ variable "endpoints" {
     "secret;DELETE /vault/{vaultId}/secret/{id}",
     # Session
     "session;DELETE /session",
+    # Audit Log
+    "audit_log;GET /audit_log",
   ]
 }
