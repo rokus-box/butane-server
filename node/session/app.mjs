@@ -3,9 +3,7 @@ import { DynamoDB } from '@aws-sdk/client-dynamodb';
 import {  status } from './util.mjs';
 
 const TABLE_NAME = process.env.TABLE_NAME;
-const dynamoDB = new DynamoDB({
-  endpoint: 'http://192.168.1.12:8000', region: 'eu-central-1',
-});
+const dynamoDB = new DynamoDB();
 
 export const handler = async (event) => {
   const token = event.headers['authorization'];
