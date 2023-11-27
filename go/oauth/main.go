@@ -7,14 +7,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/pquerna/otp/totp"
+	"golang.org/x/crypto/bcrypt"
 	c "lambda/common"
+	"log"
+	"strings"
 	"time"
 	"unicode"
 )
 
 func handler(ctx context.Context, r c.Req) (c.Res, error) {
 	provider := r.PathParameters["provider"]
-
 	agent, ip := r.RequestContext.Identity.UserAgent, r.RequestContext.Identity.SourceIP
 	if "" == agent {
 		return c.Text("User-Agent header is required", 401)
@@ -25,9 +27,24 @@ func handler(ctx context.Context, r c.Req) (c.Res, error) {
 		return c.Text("X-Mfa-Challenge header is required", 401)
 	}
 
+	body := strings.SplitN(r.Body, "\n", 2)
+
+	if len(body) != 2 {
+		return c.Text("Malformed request body", 400)
+	}
+
+	oauthCode := body[0]
+	plainPass := body[1]
+
+	if !isValidPass(plainPass) {
+		return c.Text("Password must match ^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{12,73}$ pattern", 400)
+	}
+
 	switch provider {
 	case "google":
-		return handleGoogle(ctx, r, agent, ip, mfaCh)
+		return handleGoogle(ctx, agent, ip, mfaCh, oauthCode, plainPass)
+	case "discord":
+		return handleDiscord(ctx, agent, ip, mfaCh, oauthCode, plainPass)
 	default:
 		return c.Text("Invalid provider", 400)
 	}
@@ -65,7 +82,7 @@ func getUser(ctx context.Context, ddb *dynamodb.Client, id string) *c.User {
 }
 
 // saveUser registers the user in DynamoDB with a seed vault and secret
-func saveUser(ctx context.Context, ddb *dynamodb.Client, u *c.User, passHash string) error {
+func saveUser(ctx context.Context, u *c.User, passHash string) error {
 	uItem, _ := attributevalue.MarshalMap(c.MapA{
 		"PK":           "U#" + u.Email,
 		"SK":           "U#" + u.Email,
@@ -75,7 +92,7 @@ func saveUser(ctx context.Context, ddb *dynamodb.Client, u *c.User, passHash str
 		"secret_count": u.SecretCount,
 	})
 
-	_, err := ddb.PutItem(ctx, &dynamodb.PutItemInput{
+	_, err := ddbClient.PutItem(ctx, &dynamodb.PutItemInput{
 		TableName: c.TableName,
 		Item:      uItem,
 	})
@@ -84,7 +101,7 @@ func saveUser(ctx context.Context, ddb *dynamodb.Client, u *c.User, passHash str
 }
 
 // saveSession saves the session to DynamoDB and returns the token
-func saveSession(ctx context.Context, ddb *dynamodb.Client, s *c.Session) string {
+func saveSession(ctx context.Context, s *c.Session) string {
 	item, _ := attributevalue.MarshalMap(c.MapA{
 		"PK":           "SS#" + s.Token,
 		"SK":           s.UserID,
@@ -92,7 +109,7 @@ func saveSession(ctx context.Context, ddb *dynamodb.Client, s *c.Session) string
 		"delete_after": time.Now().Add(time.Hour * 24 * 2).Unix(),
 	})
 
-	_, err := ddb.PutItem(ctx, &dynamodb.PutItemInput{
+	_, err := ddbClient.PutItem(ctx, &dynamodb.PutItemInput{
 		TableName: c.TableName,
 		Item:      item,
 	})
@@ -149,4 +166,56 @@ func isValidPass(s string) bool {
 	return correctLength && hasUpper && hasLower && hasNumber && hasSpecial
 }
 
-var passErrStr = "Password must match ^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{12,73}$ pattern"
+func handleNewUser(ctx context.Context, oauthCode, mfaCh, email, plainPass string) (c.Res, error) {
+	otpSecret := genOtp(oauthCode[len(oauthCode)-10:], "#")
+	if !verifyTotp(mfaCh, otpSecret) {
+		return c.Status(401)
+	}
+
+	newUser := c.NewUser(email)
+	newUser.MFASecret = otpSecret
+	passHash, err := bcrypt.GenerateFromPassword([]byte(plainPass), bcrypt.DefaultCost)
+
+	if nil != err {
+		log.Println("failed to hash password: ", err)
+		return c.Text("Failed to register user. Please try again later", 503)
+	}
+
+	if nil != saveUser(ctx, newUser, string(passHash)) {
+		return c.Text("Failed to register user. Please try again later", 503)
+	}
+
+	sess := c.NewSession(email)
+	return c.Text(saveSession(ctx, sess), 201)
+}
+
+func handleExistingUser(ctx context.Context, passHash, plainPass, email, agent, ip, provider string) (c.Res, error) {
+	err := bcrypt.CompareHashAndPassword([]byte(passHash), []byte(plainPass))
+	if nil != err {
+		al := c.NewAuditLog(email, "Failed attempt to login with "+provider, c.ResourceSession, c.ActionCreate, c.MapS{"agent": agent, "ip": ip})
+
+		item, _ := attributevalue.MarshalMap(c.MapA{
+			"PK":           "U#" + al.UserID,
+			"SK":           "AL#" + al.Timestamp.Format(time.RFC3339Nano),
+			"action":       al.Action,
+			"resource":     al.Resource,
+			"message":      al.Message,
+			"data":         al.Data,
+			"delete_after": time.Now().Add(time.Hour * 24 * 20).Unix(),
+		})
+
+		_, err := ddbClient.PutItem(ctx, &dynamodb.PutItemInput{
+			TableName: c.TableName,
+			Item:      item,
+		})
+
+		if nil != err {
+			panic(err)
+		}
+
+		return c.Status(401)
+	}
+
+	sess := c.NewSession(email)
+	return c.Text(saveSession(ctx, sess), 201)
+}
