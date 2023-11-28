@@ -52,6 +52,6 @@ variable "endpoints" {
     # Session
     "session;DELETE /session",
     # Audit Log
-    "audit_log;GET /audit_log",
+    "audit_log;GET /audit-log",
   ]
 }
