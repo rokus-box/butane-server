@@ -110,12 +110,12 @@ func NewAuditLog(uID, msg string, data ...any) *AuditLog {
 func NewSession(uID string) *Session {
 	return &Session{
 		Token:  HashSHA256Base64(NewID()),
-		Expiry: time.Now().Add(1 * time.Minute).Unix(),
+		Expiry: time.Now().Add(4 * time.Minute).Unix(),
 		UserID: uID,
 	}
 }
 
 // Extend updates the expiry of the session
 func (ss *Session) Extend() {
-	ss.Expiry = time.Now().Add(1 * time.Minute).Unix()
+	ss.Expiry = time.Now().Add(4 * time.Minute).Unix()
 }
