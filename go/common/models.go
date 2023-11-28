@@ -67,7 +67,6 @@ const (
 	ResourceSession uint8 = iota
 	ResourceVault
 	ResourceSecret
-	ResourceMetadatum
 )
 
 // NewUser creates a new user with a sample vault, secret and metadata
