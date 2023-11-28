@@ -43,8 +43,6 @@ type (
 
 	AuditLog struct {
 		Data      any       `json:"data,omitempty" dynamodbav:"data"`
-		Action    uint8     `json:"action" dynamodbav:"action"`
-		Resource  uint8     `json:"resource" dynamodbav:"resource"`
 		Message   string    `json:"message" dynamodbav:"message"`
 		Timestamp time.Time `json:"timestamp" dynamodbav:"SK"`
 		UserID    string    `json:"-"`
@@ -55,18 +53,6 @@ const (
 	MetadatumTypeText uint8 = iota
 	MetadatumTypeMFA
 	MetadatumTypeConfidential
-)
-
-const (
-	ActionCreate uint8 = iota
-	ActionUpdate
-	ActionDelete
-)
-
-const (
-	ResourceSession uint8 = iota
-	ResourceVault
-	ResourceSecret
 )
 
 // NewUser creates a new user with a sample vault, secret and metadata
@@ -106,12 +92,10 @@ func NewMetadatum(key, value string, t uint8) *Metadatum {
 	}
 }
 
-func NewAuditLog(uID, msg string, rType, aType uint8, data ...any) *AuditLog {
+func NewAuditLog(uID, msg string, data ...any) *AuditLog {
 	al := &AuditLog{
 		UserID:    uID,
 		Timestamp: time.Now(),
-		Resource:  rType,
-		Action:    aType,
 		Message:   msg,
 	}
 
