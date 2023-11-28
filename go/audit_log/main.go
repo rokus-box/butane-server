@@ -25,7 +25,10 @@ func handler(ctx context.Context, r c.Req) (c.Res, error) {
 		TableName:                 c.TableName,
 		KeyConditionExpression:    condExpr,
 		ExpressionAttributeValues: attrValues,
+		Limit:                     aws.Int32(25),
+		ScanIndexForward:          aws.Bool(false),
 	})
+
 	if nil != err {
 		panic(err)
 	}
