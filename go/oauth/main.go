@@ -192,16 +192,14 @@ func handleNewUser(ctx context.Context, oauthCode, mfaCh, email, plainPass strin
 func handleExistingUser(ctx context.Context, passHash, plainPass, email, agent, ip, provider string) (c.Res, error) {
 	err := bcrypt.CompareHashAndPassword([]byte(passHash), []byte(plainPass))
 	if nil != err {
-		al := c.NewAuditLog(email, "Failed attempt to login with "+provider, c.ResourceSession, c.ActionCreate, c.MapS{"agent": agent, "ip": ip})
+		al := c.NewAuditLog(email, "Failed attempt to login with "+provider, c.MapS{"agent": agent, "ip": ip})
 
 		item, _ := attributevalue.MarshalMap(c.MapA{
 			"PK":           "U#" + al.UserID,
 			"SK":           "AL#" + al.Timestamp.Format(time.RFC3339Nano),
-			"action":       al.Action,
-			"resource":     al.Resource,
 			"message":      al.Message,
 			"data":         al.Data,
-			"delete_after": time.Now().Add(time.Hour * 24 * 20).Unix(),
+			"delete_after": time.Now().Add(time.Hour * 24 * 10).Unix(),
 		})
 
 		_, err := ddbClient.PutItem(ctx, &dynamodb.PutItemInput{
