@@ -1,6 +1,5 @@
 resource "aws_apigatewayv2_api" "http" {
   name          = "Butane API"
-  description   = "Example API. Delete this after you're done with it."
   protocol_type = "HTTP"
   cors_configuration {
     allow_headers = ["X-Mfa-Challenge", "Authorization", "Content-Type"]
@@ -14,7 +13,6 @@ resource "aws_apigatewayv2_stage" "prod" {
   auto_deploy = true
   name        = "prod"
 }
-
 
 resource "aws_apigatewayv2_integration" "lambdas" {
   for_each           = var.functions
@@ -30,7 +28,6 @@ resource "aws_apigatewayv2_route" "lambdas" {
   route_key = split(";", each.value)[1]
   target    = "integrations/${aws_apigatewayv2_integration.lambdas[split(";", each.value)[0]].id}"
 }
-
 
 resource "aws_lambda_permission" "api_gw" {
   for_each      = var.functions
