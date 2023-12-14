@@ -71,8 +71,3 @@ variable "endpoints" {
     "audit_log;GET /audit-log",
   ]
 }
-
-variable "env_vars" {
-  type        = string
-  description = "Environment variables to set for all functions"
-}
