@@ -8,7 +8,6 @@ data/
 env.json
 .env
 
-**/.terraform/*
 *.tfstate
 *.tfstate.*
 crash.log
@@ -23,7 +22,7 @@ override.tf.json
 terraform.rc
 terraform/outputs/
 terraform/*_testing.tf
-terraform/.terraform*
+.terraform*
 
 **.aws-sam-iacs/
 
