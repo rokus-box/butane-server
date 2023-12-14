@@ -45,7 +45,7 @@ jobs:
 
       - name: Write env variables to file
         run: |
-          echo "${{ secrets.ENV_FILE }}" > env.json
+          echo '${{ secrets.ENV_FILE }}' > env.json
 
       - name: Run Terraform
         run: |
