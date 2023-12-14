@@ -48,4 +48,4 @@ jobs:
         run: |
           cd terraform
           terraform init
-          terraform apply -auto-approve -var-env_vars="${{ secrets.ENV_FILE }}"
+          terraform apply -auto-approve -var env_vars="${{ secrets.ENV_FILE }}"
