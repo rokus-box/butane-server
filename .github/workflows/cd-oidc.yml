@@ -1,0 +1,45 @@
+name: OIDC CD
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.CD_ROLE_ARN }}
+          role-session-name: ${{ github.sha }}
+          aws-region: eu-central-1
+      - name: Create Outputs
+        run: make mkdir_tf_outputs
+
+      - name: Build Go
+        run: make build_go
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build Node
+        run: make build_node
+
+      - name: Run Terraform
+        run: | 
+          cd terraform
+          terraform init
+          terraform apply -auto-approve 

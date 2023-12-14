@@ -10,11 +10,9 @@ build_go: test_go
         rm -f $(fn)/bootstrap; \
 	)
 
-test_go: build_node
+test_go:
 	@cd go && go test -cover ./... || exit;
 
-
-# TODO: Delete tests folder too
 NODE_FNS = session
 build_node:
 	@cd node && \
@@ -23,3 +21,6 @@ build_node:
 		npm install && npm test || exit && \
 		zip -r -q ../../terraform/outputs/$(fn) . && cd ..; \
 	)
+
+mkdir_tf_outputs:
+	@mkdir -p terraform/outputs
