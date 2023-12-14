@@ -1,5 +1,5 @@
 resource "aws_apigatewayv2_api" "http" {
-  name          = "Delete Later"
+  name          = "Butane API"
   description   = "Example API. Delete this after you're done with it."
   protocol_type = "HTTP"
   cors_configuration {
