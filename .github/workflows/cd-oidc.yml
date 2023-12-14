@@ -24,8 +24,8 @@ jobs:
           role-to-assume: ${{ secrets.CD_ROLE_ARN }}
           role-session-name: ${{ github.sha }}
           aws-region: eu-central-1
-      - name: Create Outputs
-        run: make mkdir_tf_outputs
+      - name: Create Outputs Directory
+        run: mkdir -p terraform/outputs
 
       - name: Build Go
         run: make build_go
@@ -39,7 +39,8 @@ jobs:
         run: make build_node
 
       - name: Run Terraform
-        run: | 
+        # Get "env_vars" variable from github secrets and pass it to terraform. The variable name on github secrets should be "ENV_FILE"
+        run: |
           cd terraform
           terraform init
-          terraform apply -auto-approve 
+          terraform apply -auto-approve -var-env_vars="${{ secrets.ENV_FILE }}"

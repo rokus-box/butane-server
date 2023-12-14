@@ -21,6 +21,3 @@ build_node:
 		npm install && npm test || exit && \
 		zip -r -q ../../terraform/outputs/$(fn) . && cd ..; \
 	)
-
-mkdir_tf_outputs:
-	@mkdir -p terraform/outputs

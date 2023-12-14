@@ -52,8 +52,8 @@ resource "aws_lambda_function" "lambdas" {
   role             = aws_iam_role.delete_later_role.arn
   source_code_hash = filebase64sha256("outputs/${each.key}.zip")
   environment {
-    # variables = jsondecode(var.env_vars)
-    variables = jsondecode(file("../env.json"))
+    variables = jsondecode(var.env_vars)
+    # variables = jsondecode(file("../env.json"))
   }
 }
 
