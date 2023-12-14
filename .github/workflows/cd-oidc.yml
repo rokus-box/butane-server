@@ -43,9 +43,12 @@ jobs:
       - name: Build Node
         run: make build_node
 
+      - name: Write env variables to file
+        run: |
+          echo ${{ secrets.ENV_FILE }} > .env.json
+
       - name: Run Terraform
-        # Get "env_vars" variable from github secrets and pass it to terraform. The variable name on github secrets should be "ENV_FILE"
         run: |
           cd terraform
           terraform init
-          terraform apply -auto-approve -var env_vars="${{ secrets.ENV_FILE }}"
+          terraform apply -auto-approve
