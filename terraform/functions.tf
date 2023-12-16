@@ -1,5 +1,5 @@
-resource "aws_iam_role" "delete_later_role" {
-  name               = "delete_later_role"
+resource "aws_iam_role" "fns" {
+  name               = "lambdas_role"
   assume_role_policy = jsonencode({
     Version   = "2012-10-17"
     Statement = [
@@ -14,9 +14,9 @@ resource "aws_iam_role" "delete_later_role" {
   })
 }
 
-resource "aws_iam_role_policy" "delete_later_policy" {
-  name   = "delete_later_policy"
-  role   = aws_iam_role.delete_later_role.id
+resource "aws_iam_role_policy" "fns" {
+  name   = "lambdas_policy"
+  role   = aws_iam_role.fns.id
   policy = jsonencode({
     Version   = "2012-10-17"
     Statement = [
@@ -49,7 +49,7 @@ resource "aws_lambda_function" "lambdas" {
   handler          = each.value.handler
   runtime          = each.value.runtime
   description      = each.value.description
-  role             = aws_iam_role.delete_later_role.arn
+  role             = aws_iam_role.fns.arn
   source_code_hash = filebase64sha256("outputs/${each.key}.zip")
   environment {
     variables = jsondecode(file("../env.json"))

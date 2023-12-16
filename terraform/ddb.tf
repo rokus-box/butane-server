@@ -36,7 +36,7 @@ resource "aws_lambda_function" "session_log" {
   handler          = "bootstrap"
   runtime          = "provided.al2023"
   description      = "Handles DynamoDB stream events and logs write actions to DynamoDB"
-  role             = aws_iam_role.delete_later_role.arn
+  role             = aws_iam_role.fns.arn
   source_code_hash = filebase64sha256("outputs/${local.fn_name}.zip")
   environment {
     variables = {
@@ -47,7 +47,7 @@ resource "aws_lambda_function" "session_log" {
 
 resource "aws_iam_role_policy" "session_log" {
   name   = "${local.fn_name}_policy"
-  role   = aws_iam_role.delete_later_role.id
+  role   = aws_iam_role.fns.id
   policy = jsonencode({
     Version   = "2012-10-17"
     Statement = [
