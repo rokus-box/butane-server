@@ -4,7 +4,7 @@ resource "aws_apigatewayv2_api" "http" {
   cors_configuration {
     allow_headers = ["X-Mfa-Challenge", "Authorization", "Content-Type"]
     allow_methods = ["OPTIONS", "GET", "POST", "PATCH", "DELETE"]
-    allow_origins = ["http://localhost:4200"]
+    allow_origins = ["http://localhost:4200", "https://butane.rokusbox.com"]
   }
 }
 
