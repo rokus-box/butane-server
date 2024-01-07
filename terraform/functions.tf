@@ -1,5 +1,5 @@
 resource "aws_iam_role" "fns" {
-  name               = "lambdas_role"
+  name               = "ButaneServerLambdaRole"
   assume_role_policy = jsonencode({
     Version   = "2012-10-17"
     Statement = [
@@ -15,7 +15,7 @@ resource "aws_iam_role" "fns" {
 }
 
 resource "aws_iam_role_policy" "fns" {
-  name   = "lambdas_policy"
+  name   = "ButaneServerLambdaPolicy"
   role   = aws_iam_role.fns.id
   policy = jsonencode({
     Version   = "2012-10-17"

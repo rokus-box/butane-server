@@ -10,7 +10,7 @@ terraform {
     bucket         = "asdfnq9wfjehjfdajcn98e"
     key            = "state/terraform.tfstate"
     region         = "eu-central-1"
-    dynamodb_table = "terraform_state"
+    dynamodb_table = "ButaneServerTFState"
   }
 }
 
